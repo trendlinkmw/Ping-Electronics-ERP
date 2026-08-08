@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --c-ink: 11 18 32;      /* page background, dark */
+  --c-panel: 17 26 43;    /* card/sidebar background, dark */
+  --c-line: 30 41 59;     /* borders, dark */
+  --s-100: 241 245 249;   /* headings — near-white on dark */
+  --s-200: 226 232 240;
+  --s-300: 203 213 225;
+  --s-400: 148 163 184;   /* muted labels/timestamps */
+  --s-500: 100 116 139;   /* subtle text */
+}
+
+html.light {
+  --c-ink: 248 250 252;   /* page background, light */
+  --c-panel: 255 255 255; /* card/sidebar background, light */
+  --c-line: 226 232 240;  /* borders, light */
+  --s-100: 15 23 42;      /* headings — near-black on light */
+  --s-200: 30 41 59;
+  --s-300: 51 65 85;
+  --s-400: 100 116 139;   /* muted labels/timestamps */
+  --s-500: 71 85 105;     /* subtle text */
+}
+
+* { box-sizing: border-box; }
+
+body { font-feature-settings: "tnum" 1; }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgb(var(--c-line)); border-radius: 999px; }
+
+.card {
+  @apply bg-panel border border-line rounded-xl;
+}
+
+.btn-primary {
+  @apply bg-surge text-ink font-semibold px-4 py-2 rounded-lg hover:brightness-110 transition disabled:opacity-40 disabled:cursor-not-allowed;
+}
+
+.btn-ghost {
+  @apply border border-line text-slate-200 px-4 py-2 rounded-lg hover:bg-line transition disabled:opacity-40 disabled:cursor-not-allowed;
+}
+
+.input {
+  @apply w-full bg-ink border border-line rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-surge/60;
+}
+
+.label {
+  @apply text-xs uppercase tracking-wide text-slate-400 mb-1 block;
+}
+
+.table-base {
+  @apply w-full text-sm text-left;
+}
+.table-base th {
+  @apply text-xs uppercase tracking-wide text-slate-400 font-medium px-3 py-2 border-b border-line;
+}
+.table-base td {
+  @apply px-3 py-2 border-b border-line/60 text-slate-200;
+}
+.table-base tr:hover td {
+  @apply bg-white/[0.02];
+}
+/* Receipt printing — hides the whole app UI, shows only the receipt itself */
+@media print {
+  body * { visibility: hidden; }
+  #receipt-print, #receipt-print * { visibility: visible; }
+  #receipt-print {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 80mm;
+  }
+  .no-print { display: none !important; }
+}
