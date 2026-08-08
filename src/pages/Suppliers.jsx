@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useTable } from '../lib/useTable'
 import { useAuth } from '../context/AuthContext'
 
@@ -63,7 +64,9 @@ export default function Suppliers() {
               <tbody>
                 {rows.map(s => (
                   <tr key={s.id}>
-                    <td>{s.name}</td>
+                    <td>
+                      <Link to={`/suppliers/${s.id}`} className="text-surge hover:underline">{s.name}</Link>
+                    </td>
                     <td className="text-slate-400">{s.phone || '—'}</td>
                     <td className={Number(s.outstanding_balance) > 0 ? 'text-volt font-mono' : 'font-mono text-slate-500'}>
                       {Number(s.outstanding_balance).toLocaleString()}

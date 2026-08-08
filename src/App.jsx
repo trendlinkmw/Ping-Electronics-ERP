@@ -17,6 +17,8 @@ import StockAdjustment from './pages/StockAdjustment'
 import Settings from './pages/Settings'
 import Receipt from './pages/Receipt'
 import SalesHistory from './pages/SalesHistory'
+import CustomerDetail from './pages/CustomerDetail'
+import SupplierDetail from './pages/SupplierDetail'
 
 const DASHBOARD_ROLES = ['manager', 'accountant', 'ceo', 'administrator']
 
@@ -55,8 +57,14 @@ export default function App() {
       <Route path="/customers" element={
         <ProtectedRoute allow={['manager', 'salesperson']}><Layout><Customers /></Layout></ProtectedRoute>
       } />
+      <Route path="/customers/:id" element={
+        <ProtectedRoute allow={['manager', 'salesperson']}><Layout><CustomerDetail /></Layout></ProtectedRoute>
+      } />
       <Route path="/suppliers" element={
         <ProtectedRoute allow={['manager', 'storekeeper']}><Layout><Suppliers /></Layout></ProtectedRoute>
+      } />
+      <Route path="/suppliers/:id" element={
+        <ProtectedRoute allow={['manager', 'storekeeper']}><Layout><SupplierDetail /></Layout></ProtectedRoute>
       } />
       <Route path="/purchases" element={
         <ProtectedRoute allow={['manager', 'storekeeper']}><Layout><Purchases /></Layout></ProtectedRoute>

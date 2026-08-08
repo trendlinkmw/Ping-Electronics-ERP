@@ -1,5 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
-import { Html5Qrcode } from 'html5-qrcode'
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode'
+
+const BARCODE_FORMATS = [
+  Html5QrcodeSupportedFormats.QR_CODE,
+  Html5QrcodeSupportedFormats.EAN_13,
+  Html5QrcodeSupportedFormats.EAN_8,
+  Html5QrcodeSupportedFormats.UPC_A,
+  Html5QrcodeSupportedFormats.UPC_E,
+  Html5QrcodeSupportedFormats.CODE_128,
+  Html5QrcodeSupportedFormats.CODE_39,
+  Html5QrcodeSupportedFormats.CODABAR,
+  Html5QrcodeSupportedFormats.ITF,
+]
 
 /**
  * Opens the device camera and decodes barcodes/QR codes live.
@@ -10,10 +22,11 @@ export default function BarcodeCameraScanner({ onDetected, onClose }) {
   const scannerRef = useRef(null)
   const [error, setError] = useState('')
   const [starting, setStarting] = useState(true)
+  const [manualCode, setManualCode] = useState('')
 
   useEffect(() => {
     let cancelled = false
-    const qr = new Html5Qrcode(regionId, { verbose: false })
+    const qr = new Html5Qrcode(regionId, { formatsToSupport: BARCODE_FORMATS, verbose: false })
     scannerRef.current = qr
 
     Html5Qrcode.getCameras()
@@ -23,21 +36,19 @@ export default function BarcodeCameraScanner({ onDetected, onClose }) {
           setStarting(false)
           return
         }
-        // Prefer the back/environment camera on phones
         const back = cameras.find(c => /back|rear|environment/i.test(c.label)) || cameras[cameras.length - 1]
 
         qr.start(
           back.id,
-          { fps: 10, qrbox: { width: 250, height: 150 } },
+          { fps: 15, qrbox: { width: 280, height: 140 } },
           (decodedText) => {
-            // Stop as soon as we get one good read
             qr.stop().then(() => qr.clear()).catch(() => {})
             onDetected(decodedText)
           },
-          () => { /* per-frame decode failures are normal, ignore */ }
+          () => { /* per-frame decode misses are normal, ignore */ }
         )
           .then(() => { if (!cancelled) setStarting(false) })
-          .catch(err => {
+          .catch(() => {
             if (!cancelled) {
               setError('Could not access the camera — check camera permission for this site.')
               setStarting(false)
@@ -58,6 +69,14 @@ export default function BarcodeCameraScanner({ onDetected, onClose }) {
     }
   }, [onDetected])
 
+  const submitManual = (e) => {
+    e.preventDefault()
+    if (!manualCode.trim()) return
+    const qr = scannerRef.current
+    if (qr) qr.stop().then(() => qr.clear()).catch(() => {})
+    onDetected(manualCode.trim())
+  }
+
   return (
     <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
       <div className="card w-full max-w-sm p-4">
@@ -72,8 +91,21 @@ export default function BarcodeCameraScanner({ onDetected, onClose }) {
         <div id={regionId} className="rounded-lg overflow-hidden bg-ink" />
 
         <p className="text-xs text-slate-500 mt-3">
-          Point the camera at the barcode. It'll add the product automatically once it reads clearly.
+          Hold the barcode flat, well-lit, filling most of the frame — it can take a few seconds to lock on.
         </p>
+
+        <form onSubmit={submitManual} className="mt-4 pt-3 border-t border-line">
+          <label className="label">Or type the number if scanning won't cooperate</label>
+          <div className="flex gap-2">
+            <input
+              className="input font-mono"
+              value={manualCode}
+              onChange={e => setManualCode(e.target.value)}
+              placeholder="e.g. 6009123456789"
+            />
+            <button type="submit" className="btn-primary shrink-0">Use</button>
+          </div>
+        </form>
       </div>
     </div>
   )
