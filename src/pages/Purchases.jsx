@@ -16,6 +16,9 @@ export default function Purchases() {
   const [purchases, setPurchases] = useState([])
   const [loadingPurchases, setLoadingPurchases] = useState(true)
   const [search, setSearch] = useState('')
+  const [expandedId, setExpandedId] = useState('')
+  const [expandedItems, setExpandedItems] = useState({})
+  const [loadingItemsFor, setLoadingItemsFor] = useState('')
 
   const [suppliers, setSuppliers] = useState([])
   const [products, setProducts] = useState([])
@@ -39,7 +42,7 @@ export default function Purchases() {
     setLoadingPurchases(true)
     const { data } = await supabase
       .from('purchases')
-      .select('id, reference_no, purchase_date, total, payment_status, supplier:suppliers(id, name)')
+      .select('id, reference_no, purchase_date, total, payment_status, supplier:suppliers(id, name), purchasedBy:profiles!purchased_by(full_name)')
       .order('purchase_date', { ascending: false })
       .limit(100)
     setPurchases(data || [])
@@ -47,6 +50,23 @@ export default function Purchases() {
   }
 
   useEffect(() => { loadRefData(); loadPurchases() }, [])
+
+  const toggleExpand = async (purchaseId) => {
+    if (expandedId === purchaseId) {
+      setExpandedId('')
+      return
+    }
+    setExpandedId(purchaseId)
+    if (!expandedItems[purchaseId]) {
+      setLoadingItemsFor(purchaseId)
+      const { data } = await supabase
+        .from('purchase_items')
+        .select('quantity, unit_cost, subtotal, product:products(name, sku)')
+        .eq('purchase_id', purchaseId)
+      setExpandedItems(prev => ({ ...prev, [purchaseId]: data || [] }))
+      setLoadingItemsFor('')
+    }
+  }
 
   const updateLine = (idx, patch) => setLines(ls => ls.map((l, i) => i === idx ? { ...l, ...patch } : l))
   const addLine = () => setLines(ls => [...ls, { ...emptyLine }])
@@ -56,7 +76,8 @@ export default function Purchases() {
 
   const filteredPurchases = purchases.filter(p =>
     p.reference_no.toLowerCase().includes(search.toLowerCase()) ||
-    (p.supplier?.name || '').toLowerCase().includes(search.toLowerCase())
+    (p.supplier?.name || '').toLowerCase().includes(search.toLowerCase()) ||
+    (p.purchasedBy?.full_name || '').toLowerCase().includes(search.toLowerCase())
   )
 
   const submit = async (e) => {
@@ -234,30 +255,63 @@ export default function Purchases() {
 
         <div className="card overflow-x-auto">
           <div className="p-4 border-b border-line">
-            <input className="input" placeholder="Search reference or supplier…" value={search} onChange={e => setSearch(e.target.value)} />
+            <input className="input" placeholder="Search reference, supplier, or buyer…" value={search} onChange={e => setSearch(e.target.value)} />
           </div>
           {loadingPurchases ? (
             <div className="p-6 text-sm text-slate-500">Loading…</div>
           ) : filteredPurchases.length === 0 ? (
             <div className="p-6 text-sm text-slate-500">No purchases match.</div>
           ) : (
-            <table className="table-base">
-              <thead><tr><th>Ref</th><th>Supplier</th><th>Total</th><th>Status</th></tr></thead>
-              <tbody>
-                {filteredPurchases.map(p => (
-                  <tr key={p.id}>
-                    <td className="font-mono text-xs">{p.reference_no}</td>
-                    <td>
-                      {p.supplier ? (
-                        <Link to={`/suppliers/${p.supplier.id}`} className="text-surge hover:underline">{p.supplier.name}</Link>
-                      ) : '—'}
-                    </td>
-                    <td className="font-mono">{Number(p.total).toLocaleString()}</td>
-                    <td className={p.payment_status === 'paid' ? 'text-good' : 'text-volt'}>{p.payment_status}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="divide-y divide-line/60">
+              {filteredPurchases.map(p => (
+                <div key={p.id}>
+                  <button
+                    onClick={() => toggleExpand(p.id)}
+                    className="w-full text-left px-3 py-2 hover:bg-white/[0.02] transition text-sm"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-xs text-slate-300">{p.reference_no}</span>
+                      <span className={`text-xs capitalize ${p.payment_status === 'paid' ? 'text-good' : 'text-volt'}`}>{p.payment_status}</span>
+                    </div>
+                    <div className="flex items-center justify-between mt-1 text-xs text-slate-400">
+                      <span>
+                        {p.supplier?.name || '—'} · bought by {p.purchasedBy?.full_name || '—'}
+                      </span>
+                      <span className="font-mono text-slate-200">{Number(p.total).toLocaleString()}</span>
+                    </div>
+                  </button>
+
+                  {expandedId === p.id && (
+                    <div className="px-3 pb-3 bg-ink/40">
+                      {loadingItemsFor === p.id ? (
+                        <div className="text-xs text-slate-500 py-2">Loading items…</div>
+                      ) : (expandedItems[p.id] || []).length === 0 ? (
+                        <div className="text-xs text-slate-500 py-2">No line items found.</div>
+                      ) : (
+                        <table className="table-base mt-1">
+                          <thead><tr><th>Product</th><th>Qty</th><th>Unit cost</th><th>Subtotal</th></tr></thead>
+                          <tbody>
+                            {expandedItems[p.id].map((it, i) => (
+                              <tr key={i}>
+                                <td>{it.product?.name || 'Unknown'}</td>
+                                <td className="font-mono">{it.quantity}</td>
+                                <td className="font-mono">{Number(it.unit_cost).toLocaleString()}</td>
+                                <td className="font-mono">{Number(it.subtotal).toLocaleString()}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      )}
+                      {p.supplier && (
+                        <Link to={`/suppliers/${p.supplier.id}`} className="text-surge text-xs hover:underline block mt-2">
+                          View supplier profile →
+                        </Link>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </div>

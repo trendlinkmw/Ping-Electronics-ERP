@@ -1,22 +1,21 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { useAuth } from '../context/AuthContext'
-import { useTable } from '../lib/useTable'
 
 export default function Payments() {
   const { user } = useAuth()
   const [tab, setTab] = useState('customer') // 'customer' | 'supplier'
 
-  const { rows: payments, loading: paymentsLoading, refresh: refreshPayments } =
-    useTable('payments', { orderBy: 'payment_date', ascending: false })
+  const [payments, setPayments] = useState([])
+  const [paymentsLoading, setPaymentsLoading] = useState(true)
 
   const [customers, setCustomers] = useState([])
   const [suppliers, setSuppliers] = useState([])
-  const [openSales, setOpenSales] = useState([])       // sales not fully paid
-  const [openPurchases, setOpenPurchases] = useState([]) // purchases not fully paid
+  const [openSales, setOpenSales] = useState([])
+  const [openPurchases, setOpenPurchases] = useState([])
 
   const [partyId, setPartyId] = useState('')
-  const [targetId, setTargetId] = useState('')   // sale_id or purchase_id being paid down
+  const [targetId, setTargetId] = useState('')
   const [amount, setAmount] = useState('')
   const [method, setMethod] = useState('cash')
   const [reference, setReference] = useState('')
@@ -24,12 +23,24 @@ export default function Payments() {
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
 
+  const loadPayments = () => {
+    setPaymentsLoading(true)
+    supabase
+      .from('payments')
+      .select('id, payment_type, amount, method, payment_date, recordedBy:profiles!recorded_by(full_name)')
+      .order('payment_date', { ascending: false })
+      .then(({ data }) => {
+        setPayments(data || [])
+        setPaymentsLoading(false)
+      })
+  }
+
   useEffect(() => {
     supabase.from('customers').select('id,name').order('name').then(({ data }) => setCustomers(data || []))
     supabase.from('suppliers').select('id,name').order('name').then(({ data }) => setSuppliers(data || []))
+    loadPayments()
   }, [])
 
-  // When the chosen customer/supplier changes, load their open (unpaid/partial) invoices
   useEffect(() => {
     setTargetId('')
     setAmount('')
@@ -69,13 +80,11 @@ export default function Payments() {
       const newStatus = newAmountPaid >= Number(selectedTarget.total) ? 'paid' : 'partial'
 
       if (tab === 'customer') {
-        // 1. Update the sale — this fires sync_customer_balance automatically
         const { error: updErr } = await supabase.from('sales')
           .update({ amount_paid: newAmountPaid, payment_status: newStatus })
           .eq('id', targetId)
         if (updErr) throw updErr
 
-        // 2. Log the payment itself
         const { error: payErr } = await supabase.from('payments').insert({
           payment_type: 'customer_payment',
           customer_id: partyId,
@@ -108,9 +117,8 @@ export default function Payments() {
       setTargetId('')
       setAmount('')
       setReference('')
-      // refresh the open invoice list for this party
       setPartyId(p => p)
-      refreshPayments()
+      loadPayments()
     } catch (err) {
       setError(err.message)
     } finally {
@@ -212,7 +220,7 @@ export default function Payments() {
             <div className="p-6 text-sm text-slate-500">No payments recorded yet.</div>
           ) : (
             <table className="table-base mt-2">
-              <thead><tr><th>Date</th><th>Type</th><th>Method</th><th>Amount</th></tr></thead>
+              <thead><tr><th>Date</th><th>Type</th><th>Method</th><th>Amount</th><th>By</th></tr></thead>
               <tbody>
                 {payments.map(p => (
                   <tr key={p.id}>
@@ -220,6 +228,7 @@ export default function Payments() {
                     <td className="capitalize">{p.payment_type.replace('_', ' ')}</td>
                     <td className="capitalize text-slate-400">{p.method.replace('_', ' ')}</td>
                     <td className="font-mono text-good">{Number(p.amount).toLocaleString()}</td>
+                    <td className="text-slate-400">{p.recordedBy?.full_name || '—'}</td>
                   </tr>
                 ))}
               </tbody>

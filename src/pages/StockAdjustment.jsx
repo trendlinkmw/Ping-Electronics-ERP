@@ -31,7 +31,7 @@ export default function StockAdjustment() {
     setLoadingMovements(true)
     supabase
       .from('stock_movements')
-      .select('id, movement_type, quantity, reason, created_at, product:products(name)')
+      .select('id, movement_type, quantity, reason, created_at, product:products(name), doneBy:profiles!created_by(full_name)')
       .order('created_at', { ascending: false })
       .limit(20)
       .then(({ data }) => {
@@ -173,7 +173,7 @@ export default function StockAdjustment() {
             <div className="p-6 text-sm text-slate-500">No manual adjustments logged yet.</div>
           ) : (
             <table className="table-base mt-2">
-              <thead><tr><th>Date</th><th>Product</th><th>Type</th><th>Qty</th><th>Reason</th></tr></thead>
+              <thead><tr><th>Date</th><th>Product</th><th>Type</th><th>Qty</th><th>Reason</th><th>By</th></tr></thead>
               <tbody>
                 {movements.map(m => (
                   <tr key={m.id}>
@@ -182,6 +182,7 @@ export default function StockAdjustment() {
                     <td className="capitalize text-slate-400">{m.movement_type.replace('_', ' ')}</td>
                     <td className="font-mono">{m.quantity}</td>
                     <td className="text-slate-400">{m.reason || '—'}</td>
+                    <td className="text-slate-400">{m.doneBy?.full_name || '—'}</td>
                   </tr>
                 ))}
               </tbody>

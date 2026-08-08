@@ -6,7 +6,11 @@ const CATEGORIES = ['salaries','rent','utilities','airtime','internet','marketin
 const empty = { category: 'miscellaneous', amount: '', description: '', payment_method: 'cash', expense_date: new Date().toISOString().slice(0,10) }
 
 export default function Expenses() {
-  const { rows, loading, error, insert } = useTable('expenses', { orderBy: 'expense_date', ascending: false })
+  const { rows, loading, error, insert } = useTable('expenses', {
+    orderBy: 'expense_date',
+    ascending: false,
+    select: 'id, category, amount, description, payment_method, expense_date, recorded_by, recordedBy:profiles!recorded_by(full_name)'
+  })
   const { user } = useAuth()
   const [form, setForm] = useState(empty)
   const [saving, setSaving] = useState(false)
@@ -79,7 +83,7 @@ export default function Expenses() {
             <div className="p-6 text-sm text-slate-500">No expenses recorded yet.</div>
           ) : (
             <table className="table-base">
-              <thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th></tr></thead>
+              <thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th>By</th></tr></thead>
               <tbody>
                 {rows.map(r => (
                   <tr key={r.id}>
@@ -87,6 +91,7 @@ export default function Expenses() {
                     <td className="capitalize">{r.category}</td>
                     <td className="text-slate-400">{r.description || '—'}</td>
                     <td className="font-mono">{Number(r.amount).toLocaleString()}</td>
+                    <td className="text-slate-400">{r.recordedBy?.full_name || '—'}</td>
                   </tr>
                 ))}
               </tbody>
