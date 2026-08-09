@@ -17,7 +17,7 @@ export default function SalesHistory() {
       setError('')
       const { data, error } = await supabase
         .from('sales')
-        .select('id, invoice_no, sale_date, total, payment_status, payment_method, customer:customers(name), cashier:profiles!sold_by(full_name)')
+        .select('id, invoice_no, sale_date, total, amount_paid, payment_status, payment_method, customer:customers(name), cashier:profiles!sold_by(full_name)')
         .order('sale_date', { ascending: false })
         .limit(200)
       if (error) setError(error.message)
@@ -76,24 +76,31 @@ export default function SalesHistory() {
                 <th>Payment</th>
                 <th>Status</th>
                 <th>Total</th>
+                <th>Outstanding</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map(r => (
-                <tr key={r.id}>
-                  <td className="font-mono text-xs">{r.invoice_no}</td>
-                  <td className="text-slate-400">{new Date(r.sale_date).toLocaleString()}</td>
-                  <td>{r.cashier?.full_name || '—'}</td>
-                  <td>{r.customer?.name || 'Walk-in'}</td>
-                  <td className="capitalize text-slate-400">{r.payment_status === 'unpaid' ? 'On credit' : (r.payment_method || '—').replace('_', ' ')}</td>
-                  <td className={`capitalize ${statusColor(r.payment_status)}`}>{r.payment_status}</td>
-                  <td className="font-mono">{Number(r.total).toLocaleString()}</td>
-                  <td>
-                    <Link to={`/receipt/${r.id}`} className="text-surge text-xs hover:underline">Receipt</Link>
-                  </td>
-                </tr>
-              ))}
+              {filtered.map(r => {
+                const outstanding = Number(r.total) - Number(r.amount_paid)
+                return (
+                  <tr key={r.id}>
+                    <td className="font-mono text-xs">{r.invoice_no}</td>
+                    <td className="text-slate-400">{new Date(r.sale_date).toLocaleString()}</td>
+                    <td>{r.cashier?.full_name || '—'}</td>
+                    <td>{r.customer?.name || 'Walk-in'}</td>
+                    <td className="capitalize text-slate-400">{r.payment_status === 'unpaid' ? 'On credit' : (r.payment_method || '—').replace('_', ' ')}</td>
+                    <td className={`capitalize ${statusColor(r.payment_status)}`}>{r.payment_status}</td>
+                    <td className="font-mono">{Number(r.total).toLocaleString()}</td>
+                    <td className={outstanding > 0 ? 'font-mono text-volt font-medium' : 'font-mono text-slate-600'}>
+                      {outstanding > 0 ? outstanding.toLocaleString() : '—'}
+                    </td>
+                    <td>
+                      <Link to={`/receipt/${r.id}`} className="text-surge text-xs hover:underline">Receipt</Link>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         )}

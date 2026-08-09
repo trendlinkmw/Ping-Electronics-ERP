@@ -6,7 +6,7 @@ import logo from '../assets/logo.png'
 
 export default function Login() {
   const { session, bannedMessage, clearBannedMessage } = useAuth()
-  const [mode, setMode] = useState('signin') // 'signin' | 'signup' | 'forgot'
+  const [mode, setMode] = useState('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
@@ -53,9 +53,9 @@ export default function Login() {
     <div className="min-h-screen bg-ink flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center flex flex-col items-center">
-          <img src={logo} alt="Ping Electronics" className="w-16 h-16 object-contain mb-3" />
-          <div className="text-surge font-mono text-xs tracking-widest mb-1">TRENDLINK ERP</div>
+          <img src={logo} alt="Ping Electronics" className="w-28 h-28 object-contain mb-3" />
           <div className="text-2xl font-semibold text-slate-100">Ping Electronics</div>
+          <div className="text-xs text-slate-500 mt-1">Powered by TrendLink</div>
         </div>
 
         {bannedMessage && (

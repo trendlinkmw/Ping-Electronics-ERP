@@ -44,10 +44,7 @@ export default function Sidebar({ open, onClose }) {
         <div className="px-5 py-5 border-b border-line flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src={logo} alt="Ping Electronics" className="w-10 h-10 object-contain" />
-            <div>
-              <div className="text-surge font-mono text-[10px] tracking-widest">TRENDLINK</div>
-              <div className="text-slate-100 font-semibold text-sm leading-tight">Ping Electronics</div>
-            </div>
+            <div className="text-slate-100 font-semibold text-sm leading-tight">Ping Electronics</div>
           </div>
           <button onClick={onClose} className="lg:hidden text-slate-400 text-xl leading-none w-8 h-8">✕</button>
         </div>
@@ -90,6 +87,7 @@ export default function Sidebar({ open, onClose }) {
             </div>
           </NavLink>
           <button onClick={signOut} className="btn-ghost w-full text-sm">Sign out</button>
+          <div className="text-center text-[10px] text-slate-600 mt-3">Powered by TrendLink</div>
         </div>
       </aside>
     </>

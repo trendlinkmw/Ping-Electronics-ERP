@@ -69,17 +69,23 @@ export default function CustomerDetail() {
             <div className="p-6 text-sm text-slate-500">No purchases yet.</div>
           ) : (
             <table className="table-base mt-2">
-              <thead><tr><th>Invoice</th><th>Date</th><th>Total</th><th>Status</th><th></th></tr></thead>
+              <thead><tr><th>Invoice</th><th>Date</th><th>Total</th><th>Outstanding</th><th>Status</th><th></th></tr></thead>
               <tbody>
-                {sales.map(s => (
-                  <tr key={s.id}>
-                    <td className="font-mono text-xs">{s.invoice_no}</td>
-                    <td className="text-slate-400">{new Date(s.sale_date).toLocaleDateString()}</td>
-                    <td className="font-mono">{Number(s.total).toLocaleString()}</td>
-                    <td className="capitalize">{s.payment_status}</td>
-                    <td><Link to={`/receipt/${s.id}`} className="text-surge text-xs hover:underline">Receipt</Link></td>
-                  </tr>
-                ))}
+                {sales.map(s => {
+                  const outstanding = Number(s.total) - Number(s.amount_paid)
+                  return (
+                    <tr key={s.id}>
+                      <td className="font-mono text-xs">{s.invoice_no}</td>
+                      <td className="text-slate-400">{new Date(s.sale_date).toLocaleDateString()}</td>
+                      <td className="font-mono">{Number(s.total).toLocaleString()}</td>
+                      <td className={outstanding > 0 ? "font-mono text-volt font-medium" : "font-mono text-slate-600"}>
+                        {outstanding > 0 ? outstanding.toLocaleString() : "—"}
+                      </td>
+                      <td className="capitalize">{s.payment_status}</td>
+                      <td><Link to={`/receipt/${s.id}`} className="text-surge text-xs hover:underline">Receipt</Link></td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           )}

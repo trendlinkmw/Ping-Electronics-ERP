@@ -42,7 +42,7 @@ export default function Purchases() {
     setLoadingPurchases(true)
     const { data } = await supabase
       .from('purchases')
-      .select('id, reference_no, purchase_date, total, payment_status, supplier:suppliers(id, name), purchasedBy:profiles!purchased_by(full_name)')
+      .select('id, reference_no, purchase_date, total, amount_paid, payment_status, supplier:suppliers(id, name), purchasedBy:profiles!purchased_by(full_name)')
       .order('purchase_date', { ascending: false })
       .limit(100)
     setPurchases(data || [])
@@ -277,7 +277,12 @@ export default function Purchases() {
                       <span>
                         {p.supplier?.name || '—'} · bought by {p.purchasedBy?.full_name || '—'}
                       </span>
-                      <span className="font-mono text-slate-200">{Number(p.total).toLocaleString()}</span>
+                      <span className="font-mono text-slate-200">
+                        {Number(p.total).toLocaleString()}
+                        {Number(p.total) - Number(p.amount_paid) > 0 && (
+                          <span className="text-volt ml-2">(owing {(Number(p.total) - Number(p.amount_paid)).toLocaleString()})</span>
+                        )}
+                      </span>
                     </div>
                   </button>
 

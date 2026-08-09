@@ -69,16 +69,22 @@ export default function SupplierDetail() {
             <div className="p-6 text-sm text-slate-500">No purchase orders yet.</div>
           ) : (
             <table className="table-base mt-2">
-              <thead><tr><th>Reference</th><th>Date</th><th>Total</th><th>Status</th></tr></thead>
+              <thead><tr><th>Reference</th><th>Date</th><th>Total</th><th>Outstanding</th><th>Status</th></tr></thead>
               <tbody>
-                {purchases.map(p => (
-                  <tr key={p.id}>
-                    <td className="font-mono text-xs">{p.reference_no}</td>
-                    <td className="text-slate-400">{new Date(p.purchase_date).toLocaleDateString()}</td>
-                    <td className="font-mono">{Number(p.total).toLocaleString()}</td>
-                    <td className="capitalize">{p.payment_status}</td>
-                  </tr>
-                ))}
+                {purchases.map(p => {
+                  const outstanding = Number(p.total) - Number(p.amount_paid)
+                  return (
+                    <tr key={p.id}>
+                      <td className="font-mono text-xs">{p.reference_no}</td>
+                      <td className="text-slate-400">{new Date(p.purchase_date).toLocaleDateString()}</td>
+                      <td className="font-mono">{Number(p.total).toLocaleString()}</td>
+                      <td className={outstanding > 0 ? "font-mono text-volt font-medium" : "font-mono text-slate-600"}>
+                        {outstanding > 0 ? outstanding.toLocaleString() : "—"}
+                      </td>
+                      <td className="capitalize">{p.payment_status}</td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           )}
