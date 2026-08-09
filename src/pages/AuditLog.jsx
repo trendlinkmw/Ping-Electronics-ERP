@@ -6,6 +6,8 @@ const ACTION_LABELS = {
   role_granted: 'Role granted',
   role_revoked: 'Role revoked',
   price_change: 'Price changed',
+  login: 'Signed in',
+  logout: 'Signed out',
 }
 
 function describeChange(log) {
@@ -13,6 +15,10 @@ function describeChange(log) {
   const next = log.new_value || {}
 
   switch (log.action) {
+    case 'login':
+      return 'Session started'
+    case 'logout':
+      return 'Session ended'
     case 'employment_status_change':
       return `${prev.email || '—'}: ${prev.employment_status || '?'} → ${next.employment_status || '?'}`
     case 'role_granted':

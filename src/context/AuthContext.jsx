@@ -21,7 +21,6 @@ export function AuthProvider({ children }) {
       .single()
 
     if (profileData && profileData.employment_status === 'inactive') {
-      // Account has been deactivated by an administrator — kick them out immediately.
       setBannedMessage(
         `Your account has been deactivated. Please contact the system administrator at ${SUPPORT_EMAIL}.`
       )
@@ -49,10 +48,15 @@ export function AuthProvider({ children }) {
       else setLoading(false)
     })
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session)
-      if (session?.user) loadProfile(session.user.id)
-      else {
+      if (session?.user) {
+        loadProfile(session.user.id)
+        // Only log a real interactive sign-in, not the silent session restore on page load
+        if (event === 'SIGNED_IN') {
+          supabase.from('audit_logs').insert({ user_id: session.user.id, action: 'login', module: 'auth' })
+        }
+      } else {
         setProfile(null)
         setRoles([])
       }
@@ -63,7 +67,14 @@ export function AuthProvider({ children }) {
 
   const hasRole = (...names) => names.some(n => roles.includes(n))
 
-  const signOut = () => supabase.auth.signOut()
+  const signOut = async () => {
+    // Log the logout while the session is still valid — once auth.signOut()
+    // runs, we're no longer "authenticated" and the write would be rejected.
+    if (session?.user) {
+      await supabase.from('audit_logs').insert({ user_id: session.user.id, action: 'logout', module: 'auth' })
+    }
+    await supabase.auth.signOut()
+  }
 
   const clearBannedMessage = () => setBannedMessage('')
 

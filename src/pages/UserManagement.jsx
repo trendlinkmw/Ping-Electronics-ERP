@@ -20,7 +20,7 @@ export default function UserManagement() {
     setLoading(true)
     setError('')
     const [{ data: p, error: pErr }, { data: r, error: rErr }, { data: a, error: aErr }] = await Promise.all([
-      supabase.from('profiles').select('id, full_name, email, employment_status').order('full_name'),
+      supabase.from('profiles').select('id, full_name, email, employment_status, avatar_url').order('full_name'),
       supabase.from('roles').select('id, name').order('name'),
       supabase.from('user_roles').select('user_id, role_id')
     ])
@@ -104,9 +104,20 @@ export default function UserManagement() {
                 return (
                   <tr key={p.id}>
                     <td>
-                      <div className="text-slate-100">{p.full_name}</div>
-                      <div className="text-xs text-slate-500">{p.email}</div>
-                      {isSelf && <div className="text-xs text-surge">this is you</div>}
+                      <div className="flex items-center gap-3">
+                        {p.avatar_url ? (
+                          <img src={p.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover border border-line" />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-ink border border-line flex items-center justify-center text-slate-500 text-xs">
+                            {p.full_name?.[0]?.toUpperCase() || '?'}
+                          </div>
+                        )}
+                        <div>
+                          <div className="text-slate-100">{p.full_name}</div>
+                          <div className="text-xs text-slate-500">{p.email}</div>
+                          {isSelf && <div className="text-xs text-surge">this is you</div>}
+                        </div>
+                      </div>
                     </td>
                     <td className="text-center">
                       <button
