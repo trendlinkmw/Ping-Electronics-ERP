@@ -25,7 +25,6 @@ export default function Sidebar({ open, onClose }) {
 
   return (
     <>
-      {/* Backdrop — only shown on mobile when the menu is open */}
       {open && (
         <div
           className="fixed inset-0 bg-black/60 z-40 lg:hidden"
@@ -72,8 +71,23 @@ export default function Sidebar({ open, onClose }) {
         </nav>
 
         <div className="px-4 py-4 border-t border-line">
-          <div className="text-sm text-slate-100 font-medium truncate">{profile?.full_name || 'User'}</div>
-          <div className="text-xs text-slate-500 truncate mb-3">{roles.join(', ') || 'no role assigned'}</div>
+          <NavLink
+            to="/profile"
+            onClick={onClose}
+            className="flex items-center gap-3 mb-3 hover:opacity-80 transition"
+          >
+            {profile?.avatar_url ? (
+              <img src={profile.avatar_url} alt="" className="w-9 h-9 rounded-full object-cover border border-line" />
+            ) : (
+              <div className="w-9 h-9 rounded-full bg-ink border border-line flex items-center justify-center text-slate-500 text-sm">
+                {profile?.full_name?.[0]?.toUpperCase() || '?'}
+              </div>
+            )}
+            <div className="min-w-0">
+              <div className="text-sm text-slate-100 font-medium truncate">{profile?.full_name || 'User'}</div>
+              <div className="text-xs text-slate-500 truncate">{roles.join(', ') || 'no role assigned'}</div>
+            </div>
+          </NavLink>
           <button onClick={signOut} className="btn-ghost w-full text-sm">Sign out</button>
         </div>
       </aside>

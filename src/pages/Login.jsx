@@ -6,7 +6,7 @@ import logo from '../assets/logo.png'
 
 export default function Login() {
   const { session, bannedMessage, clearBannedMessage } = useAuth()
-  const [mode, setMode] = useState('signin')
+  const [mode, setMode] = useState('signin') // 'signin' | 'signup' | 'forgot'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
@@ -26,7 +26,7 @@ export default function Login() {
       if (mode === 'signin') {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
-      } else {
+      } else if (mode === 'signup') {
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -35,6 +35,12 @@ export default function Login() {
         if (error) throw error
         setNotice('Account created. If email confirmation is on in Supabase, check your inbox before signing in.')
         setMode('signin')
+      } else if (mode === 'forgot') {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`
+        })
+        if (error) throw error
+        setNotice('If that email has an account, a reset link has been sent — check your inbox.')
       }
     } catch (err) {
       setError(err.message)
@@ -58,17 +64,26 @@ export default function Login() {
           </div>
         )}
 
-        <form onSubmit={submit} className="card p-6 space-y-4">
-          <div className="flex text-sm border border-line rounded-lg overflow-hidden mb-2">
-            <button type="button" onClick={() => setMode('signin')}
+        {mode !== 'forgot' && (
+          <div className="flex text-sm border border-line rounded-lg overflow-hidden mb-4">
+            <button type="button" onClick={() => { setMode('signin'); setError(''); setNotice('') }}
               className={`flex-1 py-2 ${mode === 'signin' ? 'bg-surge/10 text-surge' : 'text-slate-400'}`}>
               Sign in
             </button>
-            <button type="button" onClick={() => setMode('signup')}
+            <button type="button" onClick={() => { setMode('signup'); setError(''); setNotice('') }}
               className={`flex-1 py-2 ${mode === 'signup' ? 'bg-surge/10 text-surge' : 'text-slate-400'}`}>
               Create account
             </button>
           </div>
+        )}
+
+        <form onSubmit={submit} className="card p-6 space-y-4">
+          {mode === 'forgot' && (
+            <div>
+              <div className="font-medium text-slate-100 mb-1">Reset your password</div>
+              <p className="text-xs text-slate-500">Enter your account email — we'll send a link to set a new password.</p>
+            </div>
+          )}
 
           {mode === 'signup' && (
             <div>
@@ -82,17 +97,30 @@ export default function Login() {
             <input type="email" className="input" value={email} onChange={e => setEmail(e.target.value)} required />
           </div>
 
-          <div>
-            <label className="label">Password</label>
-            <input type="password" className="input" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} />
-          </div>
+          {mode !== 'forgot' && (
+            <div>
+              <label className="label">Password</label>
+              <input type="password" className="input" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} />
+            </div>
+          )}
 
           {error && <div className="text-bad text-sm">{error}</div>}
           {notice && <div className="text-good text-sm">{notice}</div>}
 
           <button className="btn-primary w-full" disabled={busy}>
-            {busy ? 'Please wait…' : mode === 'signin' ? 'Sign in' : 'Create account'}
+            {busy ? 'Please wait…' : mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send reset link'}
           </button>
+
+          {mode === 'signin' && (
+            <button type="button" onClick={() => { setMode('forgot'); setError(''); setNotice('') }} className="text-xs text-surge hover:underline w-full text-center">
+              Forgot your password?
+            </button>
+          )}
+          {mode === 'forgot' && (
+            <button type="button" onClick={() => { setMode('signin'); setError(''); setNotice('') }} className="text-xs text-slate-400 hover:underline w-full text-center">
+              ← Back to sign in
+            </button>
+          )}
         </form>
 
         {mode === 'signup' && (

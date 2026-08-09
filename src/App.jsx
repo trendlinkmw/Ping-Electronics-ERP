@@ -19,6 +19,8 @@ import Receipt from './pages/Receipt'
 import SalesHistory from './pages/SalesHistory'
 import CustomerDetail from './pages/CustomerDetail'
 import SupplierDetail from './pages/SupplierDetail'
+import Profile from './pages/Profile'
+import ResetPassword from './pages/ResetPassword'
 
 const DASHBOARD_ROLES = ['manager', 'accountant', 'ceo', 'administrator']
 
@@ -44,6 +46,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
 
       <Route path="/" element={
         <ProtectedRoute><Home /></ProtectedRoute>
@@ -92,6 +95,9 @@ export default function App() {
       } />
       <Route path="/history" element={
         <ProtectedRoute allow={['salesperson', 'cashier', 'manager', 'accountant']}><Layout><SalesHistory /></Layout></ProtectedRoute>
+      } />
+      <Route path="/profile" element={
+        <ProtectedRoute><Layout><Profile /></Layout></ProtectedRoute>
       } />
     </Routes>
   )
