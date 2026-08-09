@@ -2,14 +2,18 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { useAuth } from '../context/AuthContext'
 
+// The system owner's account is hidden from this list and cannot be
+// modified here — protected at the database level too (see setup SQL).
+const OWNER_EMAIL = 'trendlinkmw@gmail.com'
+
 export default function UserManagement() {
   const { user: currentUser } = useAuth()
   const [profiles, setProfiles] = useState([])
   const [roles, setRoles] = useState([])
-  const [assignments, setAssignments] = useState([]) // [{user_id, role_id}]
+  const [assignments, setAssignments] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [busyKey, setBusyKey] = useState('') // `${userId}-${roleId}` currently toggling
+  const [busyKey, setBusyKey] = useState('')
   const [busyStatusId, setBusyStatusId] = useState('')
 
   const load = async () => {
@@ -21,7 +25,7 @@ export default function UserManagement() {
       supabase.from('user_roles').select('user_id, role_id')
     ])
     if (pErr || rErr || aErr) setError((pErr || rErr || aErr).message)
-    setProfiles(p || [])
+    setProfiles((p || []).filter(row => row.email !== OWNER_EMAIL))
     setRoles(r || [])
     setAssignments(a || [])
     setLoading(false)
@@ -74,7 +78,7 @@ export default function UserManagement() {
       <h1 className="text-2xl font-semibold text-slate-100 mb-1">User Management</h1>
       <p className="text-sm text-slate-500 mb-6">
         Tick a role to grant it, untick to remove it. Deactivating a user immediately logs them out and blocks
-        further sign-ins — they'll see a message telling them to contact an administrator.
+        further sign-ins.
       </p>
 
       {error && <div className="text-bad text-sm mb-4">{error}</div>}
@@ -83,7 +87,7 @@ export default function UserManagement() {
         {loading ? (
           <div className="p-6 text-sm text-slate-500">Loading users…</div>
         ) : profiles.length === 0 ? (
-          <div className="p-6 text-sm text-slate-500">No user profiles found.</div>
+          <div className="p-6 text-sm text-slate-500">No other user profiles found.</div>
         ) : (
           <table className="table-base">
             <thead>

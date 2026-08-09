@@ -14,8 +14,8 @@ const NAV = [
   { to: '/expenses', label: 'Expenses', icon: '▦', roles: ['accountant'] },
   { to: '/payments', label: 'Payments', icon: '◎', roles: ['cashier', 'accountant', 'salesperson', 'manager'] },
   { to: '/reports', label: 'Reports', icon: '▨', roles: ['manager', 'accountant', 'ceo'] },
-  { to: '/users', label: 'User Management', icon: '⚙', roles: [] },
-  { to: '/settings', label: 'Settings', icon: '⛭', roles: [] },
+  { to: '/users', label: 'User Management', icon: '⚙', roles: ['ceo'] },
+  { to: '/settings', label: 'Settings', icon: '⛭', roles: null },
 ]
 
 export default function Sidebar({ open, onClose }) {

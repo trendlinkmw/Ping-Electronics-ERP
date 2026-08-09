@@ -24,8 +24,6 @@ import ResetPassword from './pages/ResetPassword'
 
 const DASHBOARD_ROLES = ['manager', 'accountant', 'ceo', 'administrator']
 
-// Landing page after login — sends each role to the screen that matters to them,
-// instead of everyone hitting the business-overview Dashboard by default.
 function Home() {
   const { hasRole } = useAuth()
 
@@ -79,7 +77,7 @@ export default function App() {
         <ProtectedRoute allow={['cashier', 'accountant', 'salesperson', 'manager']}><Layout><Payments /></Layout></ProtectedRoute>
       } />
       <Route path="/users" element={
-        <ProtectedRoute allow={[]}><Layout><UserManagement /></Layout></ProtectedRoute>
+        <ProtectedRoute allow={['ceo']}><Layout><UserManagement /></Layout></ProtectedRoute>
       } />
       <Route path="/reports" element={
         <ProtectedRoute allow={['manager', 'accountant', 'ceo']}><Layout><Reports /></Layout></ProtectedRoute>
@@ -88,7 +86,7 @@ export default function App() {
         <ProtectedRoute allow={['manager', 'storekeeper']}><Layout><StockAdjustment /></Layout></ProtectedRoute>
       } />
       <Route path="/settings" element={
-        <ProtectedRoute allow={[]}><Layout><Settings /></Layout></ProtectedRoute>
+        <ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>
       } />
       <Route path="/receipt/:saleId" element={
         <ProtectedRoute allow={['salesperson', 'cashier', 'manager', 'accountant']}><Receipt /></ProtectedRoute>
