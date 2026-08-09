@@ -21,6 +21,7 @@ import CustomerDetail from './pages/CustomerDetail'
 import SupplierDetail from './pages/SupplierDetail'
 import Profile from './pages/Profile'
 import ResetPassword from './pages/ResetPassword'
+import AuditLog from './pages/AuditLog'
 
 const DASHBOARD_ROLES = ['manager', 'accountant', 'ceo', 'administrator']
 
@@ -96,6 +97,9 @@ export default function App() {
       } />
       <Route path="/profile" element={
         <ProtectedRoute><Layout><Profile /></Layout></ProtectedRoute>
+      } />
+      <Route path="/audit-log" element={
+        <ProtectedRoute allow={['ceo']}><Layout><AuditLog /></Layout></ProtectedRoute>
       } />
     </Routes>
   )

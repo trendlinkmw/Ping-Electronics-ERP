@@ -15,6 +15,7 @@ const NAV = [
   { to: '/payments', label: 'Payments', icon: '◎', roles: ['cashier', 'accountant', 'salesperson', 'manager'] },
   { to: '/reports', label: 'Reports', icon: '▨', roles: ['manager', 'accountant', 'ceo'] },
   { to: '/users', label: 'User Management', icon: '⚙', roles: ['ceo'] },
+  { to: '/audit-log', label: 'Audit Log', icon: '☰', roles: ['ceo'] },
   { to: '/settings', label: 'Settings', icon: '⛭', roles: null },
 ]
 
