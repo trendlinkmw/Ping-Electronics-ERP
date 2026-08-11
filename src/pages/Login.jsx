@@ -33,14 +33,14 @@ export default function Login() {
           options: { data: { full_name: fullName } }
         })
         if (error) throw error
-        setNotice('Account created. If email confirmation is on in Supabase, check your inbox before signing in.')
+        setNotice('Account created — check your email (including Spam) for a message from "TrendLink" to confirm it before signing in.')
         setMode('signin')
       } else if (mode === 'forgot') {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: `${window.location.origin}/reset-password`
         })
         if (error) throw error
-        setNotice('If that email has an account, a reset link has been sent — check your inbox.')
+        setNotice('If that email has an account, a reset link has been sent. Check your inbox — and your Spam folder — for a message from "TrendLink".')
       }
     } catch (err) {
       setError(err.message)
