@@ -17,7 +17,7 @@ export default function Layout({ children }) {
           >
             ☰
           </button>
-          <span className="text-slate-100 font-semibold">TrendLink</span>
+          <span className="text-slate-100 font-semibold">Ping Electronics</span>
         </div>
 
         <main className="flex-1 p-4 md:p-8 max-w-7xl w-full">{children}</main>
