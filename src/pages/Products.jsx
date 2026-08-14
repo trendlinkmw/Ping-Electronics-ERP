@@ -5,10 +5,25 @@ import BarcodeCameraScanner from '../components/BarcodeCameraScanner'
 
 const empty = { sku: '', barcode: '', name: '', buying_price: '', selling_price: '', quantity: '', min_stock: '5' }
 
+const PC_SPEC_KEYS = ['Processor', 'RAM', 'Storage', 'Graphics', 'Screen Size']
+const PHONE_SPEC_KEYS = ['RAM', 'Storage', 'Screen Size', 'Battery', 'Camera']
+
+function specsObjectToList(obj) {
+  return Object.entries(obj || {}).map(([key, value]) => ({ key, value }))
+}
+function specsListToObject(list) {
+  const obj = {}
+  list.forEach(({ key, value }) => {
+    if (key.trim()) obj[key.trim()] = value.trim()
+  })
+  return obj
+}
+
 export default function Products() {
   const { rows, loading, error, insert, update } = useTable('products', { orderBy: 'name', ascending: true })
   const { user } = useAuth()
   const [form, setForm] = useState(empty)
+  const [specs, setSpecs] = useState([]) // [{key, value}]
   const [editingId, setEditingId] = useState(null)
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState('')
@@ -26,9 +41,22 @@ export default function Products() {
       buying_price: p.buying_price, selling_price: p.selling_price,
       quantity: p.quantity, min_stock: p.min_stock
     })
+    setSpecs(specsObjectToList(p.specifications))
   }
 
-  const cancel = () => { setEditingId(null); setForm(empty); setFormError('') }
+  const cancel = () => { setEditingId(null); setForm(empty); setSpecs([]); setFormError('') }
+
+  const updateSpec = (idx, patch) => setSpecs(s => s.map((row, i) => i === idx ? { ...row, ...patch } : row))
+  const addSpecRow = (key = '') => setSpecs(s => [...s, { key, value: '' }])
+  const removeSpecRow = (idx) => setSpecs(s => s.filter((_, i) => i !== idx))
+
+  const addPreset = (keys) => {
+    setSpecs(s => {
+      const existingKeys = new Set(s.map(r => r.key))
+      const additions = keys.filter(k => !existingKeys.has(k)).map(k => ({ key: k, value: '' }))
+      return [...s, ...additions]
+    })
+  }
 
   const submit = async (e) => {
     e.preventDefault()
@@ -43,6 +71,7 @@ export default function Products() {
         selling_price: Number(form.selling_price) || 0,
         quantity: Number(form.quantity) || 0,
         min_stock: Number(form.min_stock) || 0,
+        specifications: specsListToObject(specs),
       }
       if (editingId) {
         await update(editingId, payload)
@@ -123,6 +152,41 @@ export default function Products() {
             </p>
           )}
 
+          <div className="border-t border-line pt-3">
+            <div className="flex items-center justify-between mb-2">
+              <label className="label mb-0">Specifications (optional)</label>
+            </div>
+            <div className="flex gap-2 mb-3 flex-wrap">
+              <button type="button" onClick={() => addPreset(PC_SPEC_KEYS)} className="btn-ghost text-xs py-1 px-2">
+                + PC specs
+              </button>
+              <button type="button" onClick={() => addPreset(PHONE_SPEC_KEYS)} className="btn-ghost text-xs py-1 px-2">
+                + Phone specs
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              {specs.map((row, idx) => (
+                <div key={idx} className="flex gap-2">
+                  <input
+                    className="input text-sm"
+                    placeholder="e.g. RAM"
+                    value={row.key}
+                    onChange={e => updateSpec(idx, { key: e.target.value })}
+                  />
+                  <input
+                    className="input text-sm"
+                    placeholder="e.g. 8GB"
+                    value={row.value}
+                    onChange={e => updateSpec(idx, { value: e.target.value })}
+                  />
+                  <button type="button" onClick={() => removeSpecRow(idx)} className="text-bad text-xs shrink-0 px-1">✕</button>
+                </div>
+              ))}
+              <button type="button" onClick={() => addSpecRow()} className="text-surge text-xs hover:underline">+ Add spec</button>
+            </div>
+          </div>
+
           {formError && <div className="text-bad text-sm">{formError}</div>}
 
           <div className="flex gap-2 pt-1">
@@ -141,17 +205,21 @@ export default function Products() {
             <table className="table-base">
               <thead>
                 <tr>
-                  <th>SKU</th><th>Barcode</th><th>Name</th><th>Stock</th><th>Sell price</th><th></th>
+                  <th>SKU</th><th>Name</th><th>Specs</th><th>Stock</th><th>Sell price</th><th></th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map(p => {
                   const low = Number(p.quantity) <= Number(p.min_stock)
+                  const specEntries = Object.entries(p.specifications || {})
+                  const specSummary = specEntries.filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join(' • ')
                   return (
                     <tr key={p.id}>
                       <td className="font-mono text-xs text-slate-400">{p.sku}</td>
-                      <td className="font-mono text-xs text-slate-500">{p.barcode || '—'}</td>
                       <td>{p.name}</td>
+                      <td className="text-xs text-slate-500 max-w-[220px] truncate" title={specSummary}>
+                        {specSummary || '—'}
+                      </td>
                       <td className={low ? 'text-volt font-medium' : ''}>{p.quantity}{low && ' ⚠'}</td>
                       <td className="font-mono">{Number(p.selling_price).toLocaleString()}</td>
                       <td>
